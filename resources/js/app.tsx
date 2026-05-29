@@ -1,5 +1,7 @@
 import '../css/app.css';
 import './bootstrap';
+import '@mantine/core/styles.css';
+import { MantineProvider } from '@mantine/core';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -15,9 +17,11 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.tsx'),
         ),
     setup({ el, App, props }) {
-        const root = createRoot(el);
-
-        root.render(<App {...props} />);
+      createRoot(el).render(
+        <MantineProvider>
+            <App {...props} />
+        </MantineProvider>
+      );
     },
     progress: {
         color: '#4B5563',
