@@ -1,16 +1,44 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PageProps } from '@/types';
-import { Head } from '@inertiajs/react';
-
-type Person = {
-    id: number;
-    name: string;
-    display_order: number;
-};
+import PersonFormModal from '@/Pages/People/PersonFormModal';
+import { PageProps, Person } from '@/types';
+import { Head, router } from '@inertiajs/react';
+import {
+    Button,
+    Group,
+    Stack,
+    Table,
+    Text,
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { useState } from 'react';
 
 export default function Index({
     people,
 }: PageProps<{ people: Person[] }>) {
+    const [formOpened, { open: openForm, close: closeForm }] =
+        useDisclosure(false);
+    const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+
+    const openCreate = () => {
+        setEditingPerson(null);
+        openForm();
+    };
+
+    const openEdit = (person: Person) => {
+        setEditingPerson(person);
+        openForm();
+    };
+
+    const handleDelete = (person: Person) => {
+        if (!window.confirm(`「${person.name}」を削除しますか？`)) {
+            return;
+        }
+
+        router.delete(route('people.destroy', person.id), {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -23,28 +51,65 @@ export default function Index({
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            {people.length === 0 ? (
-                                <p className="text-gray-500">
-                                    登録されている対象者はいません。
-                                </p>
-                            ) : (
-                                <ul className="divide-y divide-gray-200">
+                    <Stack gap="md">
+                        <Group justify="space-between">
+                            <Text c="dimmed" size="sm">
+                                書類の対象となる方の一覧です
+                            </Text>
+                            <Button onClick={openCreate}>対象者を追加</Button>
+                        </Group>
+
+                        {people.length === 0 ? (
+                            <Text c="dimmed">登録されている対象者はいません。</Text>
+                        ) : (
+                            <Table striped highlightOnHover withTableBorder>
+                                <Table.Thead>
+                                    <Table.Tr>
+                                        <Table.Th>名前</Table.Th>
+                                        <Table.Th w={160}>操作</Table.Th>
+                                    </Table.Tr>
+                                </Table.Thead>
+                                <Table.Tbody>
                                     {people.map((person) => (
-                                        <li
-                                            key={person.id}
-                                            className="py-3 first:pt-0 last:pb-0"
-                                        >
-                                            {person.name}
-                                        </li>
+                                        <Table.Tr key={person.id}>
+                                            <Table.Td>{person.name}</Table.Td>
+                                            <Table.Td>
+                                                <Group gap="xs">
+                                                    <Button
+                                                        size="compact-sm"
+                                                        variant="light"
+                                                        onClick={() =>
+                                                            openEdit(person)
+                                                        }
+                                                    >
+                                                        編集
+                                                    </Button>
+                                                    <Button
+                                                        size="compact-sm"
+                                                        variant="light"
+                                                        color="red"
+                                                        onClick={() =>
+                                                            handleDelete(person)
+                                                        }
+                                                    >
+                                                        削除
+                                                    </Button>
+                                                </Group>
+                                            </Table.Td>
+                                        </Table.Tr>
                                     ))}
-                                </ul>
-                            )}
-                        </div>
-                    </div>
+                                </Table.Tbody>
+                            </Table>
+                        )}
+                    </Stack>
                 </div>
             </div>
+
+            <PersonFormModal
+                opened={formOpened}
+                onClose={closeForm}
+                person={editingPerson}
+            />
         </AuthenticatedLayout>
     );
 }

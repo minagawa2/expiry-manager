@@ -2,17 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Person extends Model
+class Document extends Model
 {
     protected $fillable = [
         'user_id',
-        'name',
-        'display_order',
-        'is_self',
+        'person_id',
+        'category',
+        'type',
+        'title',
+        'expiry_date',
+        'memo',
+        'status',
         'created_by',
         'updated_by',
     ];
@@ -23,7 +27,8 @@ class Person extends Model
     protected function casts(): array
     {
         return [
-            'is_self' => 'boolean',
+            'expiry_date' => 'date',
+            'status' => DocumentStatus::class,
         ];
     }
 
@@ -32,8 +37,8 @@ class Person extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function documents(): HasMany
+    public function person(): BelongsTo
     {
-        return $this->hasMany(Document::class);
+        return $this->belongsTo(Person::class);
     }
 }

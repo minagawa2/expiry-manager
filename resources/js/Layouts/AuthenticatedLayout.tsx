@@ -31,7 +31,13 @@ export default function Authenticated({
                                     href={route('dashboard')}
                                     active={route().current('dashboard')}
                                 >
-                                    Dashboard
+                                    ダッシュボード
+                                </NavLink>
+                                <NavLink
+                                    href={route('documents.index')}
+                                    active={route().current('documents.*')}
+                                >
+                                    書類一覧
                                 </NavLink>
                             </div>
                         </div>
@@ -135,7 +141,13 @@ export default function Authenticated({
                             href={route('dashboard')}
                             active={route().current('dashboard')}
                         >
-                            Dashboard
+                            ダッシュボード
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('documents.index')}
+                            active={route().current('documents.*')}
+                        >
+                            書類一覧
                         </ResponsiveNavLink>
                     </div>
 
