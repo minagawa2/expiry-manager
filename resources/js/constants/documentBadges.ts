@@ -8,6 +8,9 @@ export const categoryBadgeColors: Record<string, string> = {
     other: 'gray',
 };
 
+export const personBadgeColor = (isSelf: boolean): string =>
+    isSelf ? 'blue' : 'teal';
+
 export const statusBadgeColors: Record<DocumentStatus, string> = {
     active: 'green',
     expiring_soon: 'orange',
@@ -20,4 +23,5 @@ export const pillBadgeProps = {
     radius: 'xl' as const,
     variant: 'light' as const,
     size: 'md' as const,
+    tt: 'none' as const,
 };

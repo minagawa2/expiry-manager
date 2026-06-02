@@ -1,5 +1,6 @@
 import {
     categoryBadgeColors,
+    personBadgeColor,
     pillBadgeProps,
     statusBadgeColors,
 } from '@/constants/documentBadges';
@@ -91,7 +92,7 @@ export default function DocumentDetailModal({
                         {document.person?.name ? (
                             <Badge
                                 {...pillBadgeProps}
-                                color={isSelf ? 'indigo' : 'blue'}
+                                color={personBadgeColor(isSelf)}
                             >
                                 {isSelf
                                     ? `${document.person.name}（本人）`

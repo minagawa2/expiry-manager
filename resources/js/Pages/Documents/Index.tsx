@@ -3,6 +3,7 @@ import DocumentDetailModal from '@/Pages/Documents/DocumentDetailModal';
 import DocumentFormModal from '@/Pages/Documents/DocumentFormModal';
 import {
     categoryBadgeColors,
+    personBadgeColor,
     pillBadgeProps,
     statusBadgeColors,
 } from '@/constants/documentBadges';
@@ -82,10 +83,7 @@ export default function Index({
         const isSelf = Boolean(document.person.is_self);
 
         return (
-            <Badge
-                {...pillBadgeProps}
-                color={isSelf ? 'indigo' : 'blue'}
-            >
+            <Badge {...pillBadgeProps} color={personBadgeColor(isSelf)}>
                 {isSelf
                     ? `${document.person.name}（本人）`
                     : document.person.name}
@@ -171,7 +169,7 @@ export default function Index({
                                     <Text size="sm" c="dimmed">
                                         表示イメージ:
                                     </Text>
-                                    <Badge {...pillBadgeProps} color="indigo">
+                                    <Badge {...pillBadgeProps} color="blue">
                                         山田花子（本人）
                                     </Badge>
                                     <Badge
