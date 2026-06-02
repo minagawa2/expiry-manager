@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\EnsureDefaultPersonForUser;
 use App\Http\Requests\StoreDocumentRequest;
+use App\Http\Requests\UpdateDocumentRequest;
 use App\Models\Document;
 use App\Models\Person;
 use App\Models\User;
@@ -26,7 +27,7 @@ class DocumentController extends Controller
 
         $documents = Document::query()
             ->where('user_id', $userId)
-            ->with('person:id,name')
+            ->with('person:id,name,is_self')
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->get();
@@ -76,6 +77,50 @@ class DocumentController extends Controller
         ]);
 
         return redirect()->route('documents.index');
+    }
+
+    public function update(UpdateDocumentRequest $request, Document $document): RedirectResponse
+    {
+        $userId = $this->currentUserId($request);
+        $this->authorizeDocument($document, $userId);
+
+        $validated = $request->validated();
+
+        $person = Person::query()
+            ->where('user_id', $userId)
+            ->findOrFail($validated['person_id']);
+
+        $expiryDate = isset($validated['expiry_date'])
+            ? $request->date('expiry_date')
+            : null;
+
+        $document->update([
+            'person_id' => $person->id,
+            'title' => $validated['title'],
+            'category' => $validated['category'] ?? null,
+            'type' => $validated['type'] ?? null,
+            'expiry_date' => $expiryDate,
+            'memo' => $validated['memo'] ?? null,
+            'status' => DocumentStatusResolver::fromExpiryDate($expiryDate),
+            'updated_by' => $userId,
+        ]);
+
+        return redirect()->route('documents.index');
+    }
+
+    public function destroy(Request $request, Document $document): RedirectResponse
+    {
+        $userId = $this->currentUserId($request);
+        $this->authorizeDocument($document, $userId);
+
+        $document->delete();
+
+        return redirect()->route('documents.index');
+    }
+
+    private function authorizeDocument(Document $document, int $userId): void
+    {
+        abort_unless($document->user_id === $userId, 403);
     }
 
     /**

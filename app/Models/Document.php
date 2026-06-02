@@ -27,7 +27,7 @@ class Document extends Model
     protected function casts(): array
     {
         return [
-            'expiry_date' => 'date',
+            'expiry_date' => 'date:Y-m-d',
             'status' => DocumentStatus::class,
         ];
     }

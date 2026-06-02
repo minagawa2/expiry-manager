@@ -34,7 +34,7 @@ export interface Document {
     memo: string | null;
     status: DocumentStatus;
     updated_at: string;
-    person?: Pick<Person, 'id' | 'name'>;
+    person?: Pick<Person, 'id' | 'name' | 'is_self'>;
 }
 
 export type PageProps<

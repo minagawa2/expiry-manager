@@ -1,15 +1,31 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import DocumentDetailModal from '@/Pages/Documents/DocumentDetailModal';
 import DocumentFormModal from '@/Pages/Documents/DocumentFormModal';
+import {
+    categoryBadgeColors,
+    pillBadgeProps,
+    statusBadgeColors,
+} from '@/constants/documentBadges';
 import { documentStatusLabels } from '@/constants/documentStatusLabels';
 import {
     Document,
     DocumentCategoryOption,
+    DocumentStatus,
     PageProps,
     Person,
 } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Button, Group, Stack, Table, Text } from '@mantine/core';
+import { Badge, Button, Group, Stack, Table, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { useState } from 'react';
+
+function EmptyBadge() {
+    return (
+        <Badge {...pillBadgeProps} color="gray" variant="outline">
+            未設定
+        </Badge>
+    );
+}
 
 export default function Index({
     documents,
@@ -22,15 +38,98 @@ export default function Index({
 }>) {
     const [formOpened, { open: openForm, close: closeForm }] =
         useDisclosure(false);
+    const [detailOpened, { open: openDetail, close: closeDetail }] =
+        useDisclosure(false);
+    const [editingDocument, setEditingDocument] = useState<Document | null>(
+        null,
+    );
+    const [selectedDocument, setSelectedDocument] = useState<Document | null>(
+        null,
+    );
+
+    const openCreate = () => {
+        setEditingDocument(null);
+        openForm();
+    };
+
+    const openRow = (document: Document) => {
+        setSelectedDocument(document);
+        openDetail();
+    };
+
+    const openEditFromDetail = (document: Document) => {
+        closeDetail();
+        setEditingDocument(document);
+        openForm();
+    };
 
     const categoryLabel = (value: string | null) => {
         if (!value) {
-            return '—';
+            return null;
         }
 
         return (
             categories.find((category) => category.value === value)?.label ??
             value
+        );
+    };
+
+    const renderPersonBadge = (document: Document) => {
+        if (!document.person?.name) {
+            return <EmptyBadge />;
+        }
+
+        const isSelf = Boolean(document.person.is_self);
+
+        return (
+            <Badge
+                {...pillBadgeProps}
+                color={isSelf ? 'indigo' : 'blue'}
+            >
+                {isSelf
+                    ? `${document.person.name}（本人）`
+                    : document.person.name}
+            </Badge>
+        );
+    };
+
+    const renderCategoryBadge = (value: string | null) => {
+        const label = categoryLabel(value);
+
+        if (!label) {
+            return <EmptyBadge />;
+        }
+
+        return (
+            <Badge
+                {...pillBadgeProps}
+                color={categoryBadgeColors[value ?? ''] ?? 'gray'}
+            >
+                {label}
+            </Badge>
+        );
+    };
+
+    const renderTypeText = (value: string | null) => {
+        if (!value) {
+            return (
+                <Text size="sm" c="dimmed">
+                    —
+                </Text>
+            );
+        }
+
+        return <Text size="sm">{value}</Text>;
+    };
+
+    const renderStatusBadge = (status: DocumentStatus) => {
+        return (
+            <Badge
+                {...pillBadgeProps}
+                color={statusBadgeColors[status] ?? 'gray'}
+            >
+                {documentStatusLabels[status] ?? status}
+            </Badge>
         );
     };
 
@@ -52,7 +151,7 @@ export default function Index({
                                 登録した書類の一覧です
                             </Text>
                             <Group>
-                                <Button onClick={openForm}>書類を追加</Button>
+                                <Button onClick={openCreate}>書類を追加</Button>
                                 <Button
                                     component={Link}
                                     href={route('people.index')}
@@ -64,9 +163,29 @@ export default function Index({
                         </Group>
 
                         {documents.length === 0 ? (
-                            <Text c="dimmed">
-                                登録されている書類はありません。
-                            </Text>
+                            <Stack gap="sm">
+                                <Text c="dimmed">
+                                    登録されている書類はありません。
+                                </Text>
+                                <Group gap="xs">
+                                    <Text size="sm" c="dimmed">
+                                        表示イメージ:
+                                    </Text>
+                                    <Badge {...pillBadgeProps} color="indigo">
+                                        山田花子（本人）
+                                    </Badge>
+                                    <Badge
+                                        {...pillBadgeProps}
+                                        color="violet"
+                                    >
+                                        資格
+                                    </Badge>
+                                    <Text size="sm">1級土木</Text>
+                                    <Badge {...pillBadgeProps} color="green">
+                                        有効
+                                    </Badge>
+                                </Group>
+                            </Stack>
                         ) : (
                             <Table
                                 striped
@@ -90,32 +209,44 @@ export default function Index({
                                 </Table.Thead>
                                 <Table.Tbody>
                                     {documents.map((document) => (
-                                        <Table.Tr key={document.id}>
-                                            <Table.Td>{document.title}</Table.Td>
-                                            <Table.Td>
-                                                {document.person?.name ?? '—'}
+                                        <Table.Tr
+                                            key={document.id}
+                                            onClick={() => openRow(document)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <Table.Td fw={500}>
+                                                {document.title}
                                             </Table.Td>
                                             <Table.Td>
-                                                {categoryLabel(
+                                                {renderPersonBadge(document)}
+                                            </Table.Td>
+                                            <Table.Td>
+                                                {renderCategoryBadge(
                                                     document.category,
                                                 )}
                                             </Table.Td>
                                             <Table.Td>
-                                                {document.type ?? '—'}
+                                                {renderTypeText(document.type)}
                                             </Table.Td>
                                             <Table.Td>
-                                                {document.expiry_date
-                                                    ? new Date(
-                                                          document.expiry_date,
-                                                      ).toLocaleDateString(
-                                                          'ja-JP',
-                                                      )
-                                                    : '—'}
+                                                {document.expiry_date ? (
+                                                    <Text size="sm">
+                                                        {new Date(
+                                                            document.expiry_date,
+                                                        ).toLocaleDateString(
+                                                            'ja-JP',
+                                                        )}
+                                                    </Text>
+                                                ) : (
+                                                    <Text size="sm" c="dimmed">
+                                                        —
+                                                    </Text>
+                                                )}
                                             </Table.Td>
                                             <Table.Td>
-                                                {documentStatusLabels[
-                                                    document.status
-                                                ] ?? document.status}
+                                                {renderStatusBadge(
+                                                    document.status,
+                                                )}
                                             </Table.Td>
                                         </Table.Tr>
                                     ))}
@@ -126,11 +257,20 @@ export default function Index({
                 </div>
             </div>
 
+            <DocumentDetailModal
+                opened={detailOpened}
+                onClose={closeDetail}
+                document={selectedDocument}
+                categories={categories}
+                onEdit={openEditFromDetail}
+            />
+
             <DocumentFormModal
                 opened={formOpened}
                 onClose={closeForm}
                 people={people}
                 categories={categories}
+                document={editingDocument}
             />
         </AuthenticatedLayout>
     );

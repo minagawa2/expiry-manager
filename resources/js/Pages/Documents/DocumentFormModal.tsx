@@ -1,4 +1,4 @@
-import { DocumentCategoryOption, Person } from '@/types';
+import { Document, DocumentCategoryOption, Person } from '@/types';
 import { useForm } from '@inertiajs/react';
 import {
     Button,
@@ -16,6 +16,7 @@ type Props = {
     onClose: () => void;
     people: Pick<Person, 'id' | 'name' | 'is_self'>[];
     categories: DocumentCategoryOption[];
+    document?: Document | null;
 };
 
 const emptyForm = {
@@ -50,8 +51,11 @@ export default function DocumentFormModal({
     onClose,
     people,
     categories,
+    document = null,
 }: Props) {
-    const { data, setData, post, processing, errors, reset, clearErrors } =
+    const isEdit = document !== null;
+
+    const { data, setData, post, patch, processing, errors, reset, clearErrors } =
         useForm(emptyForm);
 
     const personOptions = people.map((person) => ({
@@ -71,11 +75,25 @@ export default function DocumentFormModal({
 
         reset();
         clearErrors();
-        setData({
-            ...emptyForm,
-            person_id: defaultPersonId(people),
-        });
-    }, [opened, people]);
+
+        if (document) {
+            setData({
+                person_id: String(document.person_id),
+                title: document.title,
+                category: document.category ?? '',
+                type: document.type ?? '',
+                expiry_date: document.expiry_date
+                    ? document.expiry_date.slice(0, 10)
+                    : '',
+                memo: document.memo ?? '',
+            });
+        } else {
+            setData({
+                ...emptyForm,
+                person_id: defaultPersonId(people),
+            });
+        }
+    }, [opened, document, people]);
 
     const handleClose = () => {
         reset();
@@ -85,6 +103,15 @@ export default function DocumentFormModal({
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
+
+        if (isEdit && document) {
+            patch(route('documents.update', document.id), {
+                preserveScroll: true,
+                onSuccess: handleClose,
+            });
+
+            return;
+        }
 
         post(route('documents.store'), {
             preserveScroll: true,
@@ -96,7 +123,7 @@ export default function DocumentFormModal({
         <Modal
             opened={opened}
             onClose={handleClose}
-            title="書類を登録"
+            title={isEdit ? '書類を編集' : '書類を登録'}
             size="lg"
         >
             <form onSubmit={submit}>
@@ -182,7 +209,7 @@ export default function DocumentFormModal({
                             キャンセル
                         </Button>
                         <Button type="submit" loading={processing}>
-                            登録
+                            {isEdit ? '更新' : '登録'}
                         </Button>
                     </Group>
                 </Stack>
