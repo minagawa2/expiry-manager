@@ -6,26 +6,9 @@ use App\Models\Person;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class PersonController extends Controller
 {
-    public function index(Request $request): Response
-    {
-        $userId = $this->currentUserId($request);
-
-        $people = Person::query()
-            ->where('user_id', $userId)
-            ->orderBy('display_order')
-            ->orderBy('id')
-            ->get();
-
-        return Inertia::render('People/Index', [
-            'people' => $people,
-        ]);
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $userId = $this->currentUserId($request);
@@ -46,7 +29,7 @@ class PersonController extends Controller
             'updated_by' => $userId,
         ]);
 
-        return redirect()->route('people.index');
+        return back();
     }
 
     public function update(Request $request, Person $person): RedirectResponse
@@ -63,7 +46,7 @@ class PersonController extends Controller
             'updated_by' => $userId,
         ]);
 
-        return redirect()->route('people.index');
+        return back();
     }
 
     public function destroy(Request $request, Person $person): RedirectResponse
@@ -73,7 +56,42 @@ class PersonController extends Controller
 
         $person->delete();
 
-        return redirect()->route('people.index');
+        return back();
+    }
+
+    public function reorder(Request $request): RedirectResponse
+    {
+        $userId = $this->currentUserId($request);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $ownedIds = Person::query()
+            ->where('user_id', $userId)
+            ->pluck('id')
+            ->all();
+
+        $position = 1;
+
+        foreach ($validated['ids'] as $id) {
+            if (! in_array($id, $ownedIds, true)) {
+                continue;
+            }
+
+            Person::query()
+                ->where('user_id', $userId)
+                ->where('id', $id)
+                ->update([
+                    'display_order' => $position,
+                    'updated_by' => $userId,
+                ]);
+
+            $position++;
+        }
+
+        return back();
     }
 
     private function currentUserId(Request $request): int

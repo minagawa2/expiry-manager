@@ -34,6 +34,7 @@ class DocumentController extends Controller
 
         $people = Person::query()
             ->where('user_id', $userId)
+            ->withCount('documents')
             ->orderBy('display_order')
             ->orderBy('id')
             ->get(['id', 'name', 'display_order', 'is_self']);

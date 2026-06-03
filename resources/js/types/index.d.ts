@@ -10,6 +10,7 @@ export interface Person {
     name: string;
     display_order: number;
     is_self?: boolean;
+    documents_count?: number;
 }
 
 export interface DocumentCategoryOption {

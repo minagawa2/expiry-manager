@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DocumentDetailModal from '@/Pages/Documents/DocumentDetailModal';
 import DocumentFormModal from '@/Pages/Documents/DocumentFormModal';
+import PersonManagerModal from '@/Pages/People/PersonManagerModal';
 import {
     categoryBadgeColors,
     personBadgeColor,
@@ -15,7 +16,7 @@ import {
     PageProps,
     Person,
 } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Badge, Button, Group, Stack, Table, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useState } from 'react';
@@ -41,6 +42,10 @@ export default function Index({
         useDisclosure(false);
     const [detailOpened, { open: openDetail, close: closeDetail }] =
         useDisclosure(false);
+    const [
+        personManagerOpened,
+        { open: openPersonManager, close: closePersonManager },
+    ] = useDisclosure(false);
     const [editingDocument, setEditingDocument] = useState<Document | null>(
         null,
     );
@@ -151,8 +156,7 @@ export default function Index({
                             <Group>
                                 <Button onClick={openCreate}>書類を追加</Button>
                                 <Button
-                                    component={Link}
-                                    href={route('people.index')}
+                                    onClick={openPersonManager}
                                     variant="default"
                                 >
                                     対象者管理
@@ -269,6 +273,12 @@ export default function Index({
                 people={people}
                 categories={categories}
                 document={editingDocument}
+            />
+
+            <PersonManagerModal
+                opened={personManagerOpened}
+                onClose={closePersonManager}
+                people={people}
             />
         </AuthenticatedLayout>
     );

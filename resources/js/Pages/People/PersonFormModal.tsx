@@ -7,9 +7,15 @@ type Props = {
     opened: boolean;
     onClose: () => void;
     person: Person | null;
+    zIndex?: number;
 };
 
-export default function PersonFormModal({ opened, onClose, person }: Props) {
+export default function PersonFormModal({
+    opened,
+    onClose,
+    person,
+    zIndex,
+}: Props) {
     const isEdit = person !== null;
 
     const { data, setData, post, patch, processing, errors, reset, clearErrors } =
@@ -55,6 +61,7 @@ export default function PersonFormModal({ opened, onClose, person }: Props) {
             opened={opened}
             onClose={handleClose}
             title={isEdit ? '対象者を編集' : '対象者を追加'}
+            zIndex={zIndex}
         >
             <form onSubmit={submit}>
                 <Stack gap="md">
