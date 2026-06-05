@@ -35,6 +35,7 @@ export interface Document {
     memo: string | null;
     status: DocumentStatus;
     updated_at: string;
+    days_remaining?: number;
     person?: Pick<Person, 'id' | 'name' | 'is_self'>;
 }
 

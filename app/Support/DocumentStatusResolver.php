@@ -7,6 +7,22 @@ use Carbon\CarbonInterface;
 
 class DocumentStatusResolver
 {
+    /**
+     * Resolve the status to display.
+     *
+     * Manual states (renewal pending / renewed) are kept as-is; otherwise the
+     * status is derived live from the expiry date so the list never shows a
+     * stale value.
+     */
+    public static function resolve(DocumentStatus $current, ?CarbonInterface $expiryDate): DocumentStatus
+    {
+        if (in_array($current, [DocumentStatus::RenewalPending, DocumentStatus::Renewed], true)) {
+            return $current;
+        }
+
+        return self::fromExpiryDate($expiryDate);
+    }
+
     public static function fromExpiryDate(?CarbonInterface $expiryDate): DocumentStatus
     {
         if ($expiryDate === null) {

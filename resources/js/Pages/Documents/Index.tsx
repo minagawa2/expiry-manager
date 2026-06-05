@@ -17,9 +17,18 @@ import {
     Person,
 } from '@/types';
 import { Head } from '@inertiajs/react';
-import { Badge, Button, Group, Stack, Table, Text } from '@mantine/core';
+import {
+    Badge,
+    Button,
+    Group,
+    Select,
+    Stack,
+    Table,
+    Text,
+    TextInput,
+} from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function EmptyBadge() {
     return (
@@ -33,10 +42,12 @@ export default function Index({
     documents,
     people,
     categories,
+    openDocumentId,
 }: PageProps<{
     documents: Document[];
     people: Pick<Person, 'id' | 'name' | 'display_order' | 'is_self'>[];
     categories: DocumentCategoryOption[];
+    openDocumentId?: number | null;
 }>) {
     const [formOpened, { open: openForm, close: closeForm }] =
         useDisclosure(false);
@@ -68,6 +79,22 @@ export default function Index({
         setEditingDocument(document);
         openForm();
     };
+
+    useEffect(() => {
+        if (!openDocumentId) {
+            return;
+        }
+
+        const target = documents.find(
+            (document) => document.id === openDocumentId,
+        );
+
+        if (target) {
+            setSelectedDocument(target);
+            openDetail();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openDocumentId]);
 
     const categoryLabel = (value: string | null) => {
         if (!value) {
@@ -136,6 +163,55 @@ export default function Index({
         );
     };
 
+    const [personFilter, setPersonFilter] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
+    const [keyword, setKeyword] = useState('');
+
+    const personFilterOptions = people.map((person) => ({
+        value: String(person.id),
+        label: person.is_self ? `${person.name}（本人）` : person.name,
+    }));
+
+    const statusFilterOptions = (
+        Object.keys(documentStatusLabels) as DocumentStatus[]
+    ).map((status) => ({
+        value: status,
+        label: documentStatusLabels[status],
+    }));
+
+    const normalizedKeyword = keyword.trim().toLowerCase();
+
+    const filteredDocuments = documents.filter((document) => {
+        if (personFilter && String(document.person_id) !== personFilter) {
+            return false;
+        }
+
+        if (statusFilter && document.status !== statusFilter) {
+            return false;
+        }
+
+        if (normalizedKeyword) {
+            const haystack = [document.title, document.type ?? '', document.memo ?? '']
+                .join(' ')
+                .toLowerCase();
+
+            if (!haystack.includes(normalizedKeyword)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    const isFiltering =
+        personFilter !== null || statusFilter !== null || keyword !== '';
+
+    const clearFilters = () => {
+        setPersonFilter(null);
+        setStatusFilter(null);
+        setKeyword('');
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -164,6 +240,48 @@ export default function Index({
                             </Group>
                         </Group>
 
+                        {documents.length > 0 && (
+                            <Group gap="sm" align="flex-end">
+                                <Select
+                                    label="対象者"
+                                    placeholder="すべて"
+                                    data={personFilterOptions}
+                                    value={personFilter}
+                                    onChange={setPersonFilter}
+                                    clearable
+                                    searchable
+                                    w={180}
+                                />
+                                <Select
+                                    label="状態"
+                                    placeholder="すべて"
+                                    data={statusFilterOptions}
+                                    value={statusFilter}
+                                    onChange={setStatusFilter}
+                                    clearable
+                                    w={150}
+                                />
+                                <TextInput
+                                    label="キーワード"
+                                    placeholder="タイトル・種別・メモ"
+                                    value={keyword}
+                                    onChange={(event) =>
+                                        setKeyword(event.currentTarget.value)
+                                    }
+                                    w={220}
+                                />
+                                {isFiltering && (
+                                    <Button
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={clearFilters}
+                                    >
+                                        クリア
+                                    </Button>
+                                )}
+                            </Group>
+                        )}
+
                         {documents.length === 0 ? (
                             <Stack gap="sm">
                                 <Text c="dimmed">
@@ -188,6 +306,18 @@ export default function Index({
                                     </Badge>
                                 </Group>
                             </Stack>
+                        ) : filteredDocuments.length === 0 ? (
+                            <Stack gap="sm" align="flex-start">
+                                <Text c="dimmed">
+                                    条件に一致する書類がありません。
+                                </Text>
+                                <Button
+                                    variant="light"
+                                    onClick={clearFilters}
+                                >
+                                    絞り込みをクリア
+                                </Button>
+                            </Stack>
                         ) : (
                             <Table
                                 striped
@@ -196,6 +326,14 @@ export default function Index({
                                 styles={{
                                     table: {
                                         minWidth: 640,
+                                    },
+                                    thead: {
+                                        backgroundColor:
+                                            'var(--mantine-color-blue-1)',
+                                    },
+                                    th: {
+                                        color: 'var(--mantine-color-blue-9)',
+                                        fontWeight: 600,
                                     },
                                 }}
                             >
@@ -210,7 +348,7 @@ export default function Index({
                                     </Table.Tr>
                                 </Table.Thead>
                                 <Table.Tbody>
-                                    {documents.map((document) => (
+                                    {filteredDocuments.map((document) => (
                                         <Table.Tr
                                             key={document.id}
                                             onClick={() => openRow(document)}

@@ -32,6 +32,13 @@ class DocumentController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $documents->each(function (Document $document): void {
+            $document->status = DocumentStatusResolver::resolve(
+                $document->status,
+                $document->expiry_date,
+            );
+        });
+
         $people = Person::query()
             ->where('user_id', $userId)
             ->withCount('documents')
@@ -43,6 +50,7 @@ class DocumentController extends Controller
             'documents' => $documents,
             'people' => $people,
             'categories' => $this->categoryOptions(),
+            'openDocumentId' => $request->integer('open') ?: null,
         ]);
     }
 
