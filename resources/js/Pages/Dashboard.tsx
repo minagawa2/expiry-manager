@@ -23,6 +23,7 @@ type Summary = {
     total: number;
     expired: number;
     expiringSoon: number;
+    renewalPending: number;
     active: number;
 };
 
@@ -30,6 +31,7 @@ type DashboardProps = PageProps<{
     summary: Summary;
     expired: Document[];
     expiringSoon: Document[];
+    renewalPending: Document[];
 }>;
 
 function SummaryCard({
@@ -177,6 +179,7 @@ export default function Dashboard({
     summary,
     expired,
     expiringSoon,
+    renewalPending,
 }: DashboardProps) {
     return (
         <AuthenticatedLayout
@@ -203,7 +206,7 @@ export default function Dashboard({
                             </Button>
                         </Group>
 
-                        <SimpleGrid cols={{ base: 2, sm: 4 }}>
+                        <SimpleGrid cols={{ base: 2, sm: 5 }}>
                             <SummaryCard
                                 label="期限切れ"
                                 count={summary.expired}
@@ -213,6 +216,11 @@ export default function Dashboard({
                                 label="期限間近（90日以内）"
                                 count={summary.expiringSoon}
                                 color="orange"
+                            />
+                            <SummaryCard
+                                label="更新確認待ち"
+                                count={summary.renewalPending}
+                                color="yellow"
                             />
                             <SummaryCard
                                 label="有効"
@@ -238,6 +246,12 @@ export default function Dashboard({
                                 accent="orange"
                                 documents={expiringSoon}
                                 emptyText="期限が近い書類はありません。"
+                            />
+                            <DocumentSection
+                                title="更新確認待ち"
+                                accent="yellow"
+                                documents={renewalPending}
+                                emptyText="更新確認待ちの書類はありません。"
                             />
                         </SimpleGrid>
                     </Stack>

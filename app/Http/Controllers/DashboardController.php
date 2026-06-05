@@ -31,7 +31,7 @@ class DashboardController extends Controller
 
         $expired = collect();
         $expiringSoon = collect();
-        $activeCount = 0;
+        $renewalPending = collect();
 
         foreach ($documents as $document) {
             /** @var Carbon $expiryDate */
@@ -44,12 +44,12 @@ class DashboardController extends Controller
                 $today->diffInDays($expiryDate->copy()->startOfDay(), false),
             );
 
-            if ($status === DocumentStatus::Expired) {
+            if ($status === DocumentStatus::RenewalPending) {
+                $renewalPending->push($document);
+            } elseif ($status === DocumentStatus::Expired) {
                 $expired->push($document);
             } elseif ($status === DocumentStatus::ExpiringSoon) {
                 $expiringSoon->push($document);
-            } else {
-                $activeCount++;
             }
         }
 
@@ -62,10 +62,15 @@ class DashboardController extends Controller
                 'total' => $totalCount,
                 'expired' => $expired->count(),
                 'expiringSoon' => $expiringSoon->count(),
-                'active' => $totalCount - $expired->count() - $expiringSoon->count(),
+                'renewalPending' => $renewalPending->count(),
+                'active' => $totalCount
+                    - $expired->count()
+                    - $expiringSoon->count()
+                    - $renewalPending->count(),
             ],
             'expired' => $expired->take(self::LIST_LIMIT)->values(),
             'expiringSoon' => $expiringSoon->take(self::LIST_LIMIT)->values(),
+            'renewalPending' => $renewalPending->take(self::LIST_LIMIT)->values(),
         ]);
     }
 }

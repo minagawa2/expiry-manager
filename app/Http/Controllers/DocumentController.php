@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\EnsureDefaultPersonForUser;
+use App\Enums\DocumentStatus;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
 use App\Models\Document;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Support\DocumentStatusResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -125,6 +127,29 @@ class DocumentController extends Controller
         $document->delete();
 
         return redirect()->route('documents.index');
+    }
+
+    public function updateStatus(Request $request, Document $document): RedirectResponse
+    {
+        $userId = $this->currentUserId($request);
+        $this->authorizeDocument($document, $userId);
+
+        $validated = $request->validate([
+            'status' => [
+                'required',
+                Rule::in([
+                    DocumentStatus::RenewalPending->value,
+                    DocumentStatus::Renewed->value,
+                ]),
+            ],
+        ]);
+
+        $document->update([
+            'status' => DocumentStatus::from($validated['status']),
+            'updated_by' => $userId,
+        ]);
+
+        return back();
     }
 
     private function authorizeDocument(Document $document, int $userId): void

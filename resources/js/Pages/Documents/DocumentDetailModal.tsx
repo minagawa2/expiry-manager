@@ -5,7 +5,7 @@ import {
     statusBadgeColors,
 } from '@/constants/documentBadges';
 import { documentStatusLabels } from '@/constants/documentStatusLabels';
-import { Document, DocumentCategoryOption } from '@/types';
+import { Document, DocumentCategoryOption, DocumentStatus } from '@/types';
 import { router } from '@inertiajs/react';
 import {
     Badge,
@@ -51,12 +51,32 @@ export default function DocumentDetailModal({
     onEdit,
 }: Props) {
     const [deleting, setDeleting] = useState(false);
+    const [updatingStatus, setUpdatingStatus] = useState(false);
 
     if (!document) {
         return (
             <Modal opened={opened} onClose={onClose} title="書類の詳細" />
         );
     }
+
+    const changeStatus = (status: DocumentStatus) => {
+        setUpdatingStatus(true);
+
+        router.patch(
+            route('documents.update-status', document.id),
+            { status },
+            {
+                preserveScroll: true,
+                onFinish: () => setUpdatingStatus(false),
+                onSuccess: onClose,
+            },
+        );
+    };
+
+    const showRenewalPending = document.status === 'expired';
+    const showRenewed =
+        document.status === 'expired' ||
+        document.status === 'renewal_pending';
 
     const categoryLabel =
         categories.find((category) => category.value === document.category)
@@ -169,6 +189,41 @@ export default function DocumentDetailModal({
                         </Text>
                     </DetailRow>
                 </Stack>
+
+                {(showRenewalPending || showRenewed) && (
+                    <>
+                        <Divider />
+                        <Stack gap="xs">
+                            <Text size="sm" c="dimmed">
+                                対応状況を記録できます（期限の通知を止めます）
+                            </Text>
+                            <Group>
+                                {showRenewalPending && (
+                                    <Button
+                                        variant="light"
+                                        color="yellow"
+                                        onClick={() =>
+                                            changeStatus('renewal_pending')
+                                        }
+                                        loading={updatingStatus}
+                                    >
+                                        更新待ちにする
+                                    </Button>
+                                )}
+                                {showRenewed && (
+                                    <Button
+                                        variant="light"
+                                        color="cyan"
+                                        onClick={() => changeStatus('renewed')}
+                                        loading={updatingStatus}
+                                    >
+                                        更新済みにする
+                                    </Button>
+                                )}
+                            </Group>
+                        </Stack>
+                    </>
+                )}
 
                 <Divider />
 
