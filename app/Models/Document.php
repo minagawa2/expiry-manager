@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\DocumentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Document extends Model
 {
@@ -40,5 +41,20 @@ class Document extends Model
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class);
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
+    }
+
+    public function channels(): HasMany
+    {
+        return $this->hasMany(DocumentChannel::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(DocumentNotification::class);
     }
 }

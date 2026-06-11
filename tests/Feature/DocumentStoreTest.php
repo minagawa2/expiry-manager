@@ -32,6 +32,7 @@ class DocumentStoreTest extends TestCase
                 'type' => '1級土木',
                 'expiry_date' => now()->addYear()->toDateString(),
                 'memo' => '更新注意',
+                'channels' => ['email'],
             ]);
 
         $response->assertRedirect(route('documents.index'));
@@ -63,6 +64,7 @@ class DocumentStoreTest extends TestCase
             ->post(route('documents.store'), [
                 'person_id' => $person->id,
                 'title' => '不正登録',
+                'channels' => ['email'],
             ]);
 
         $response->assertNotFound();

@@ -23,6 +23,7 @@ type Props = {
     onClose: () => void;
     document: Document | null;
     categories: DocumentCategoryOption[];
+    channelOptions: DocumentCategoryOption[];
     onEdit: (document: Document) => void;
 };
 
@@ -48,6 +49,7 @@ export default function DocumentDetailModal({
     onClose,
     document,
     categories,
+    channelOptions,
     onEdit,
 }: Props) {
     const [deleting, setDeleting] = useState(false);
@@ -83,6 +85,13 @@ export default function DocumentDetailModal({
             ?.label ?? null;
 
     const isSelf = Boolean(document.person?.is_self);
+
+    const channelLabel = (value: string) =>
+        channelOptions.find((channel) => channel.value === value)?.label ??
+        value;
+
+    const reminderDays = document.reminder_days ?? [];
+    const channels = document.channels ?? [];
 
     const handleDelete = () => {
         if (!window.confirm(`「${document.title}」を削除しますか？`)) {
@@ -176,6 +185,45 @@ export default function DocumentDetailModal({
                             {documentStatusLabels[document.status] ??
                                 document.status}
                         </Badge>
+                    </DetailRow>
+
+                    <Divider my="xs" />
+
+                    <DetailRow label="通知日">
+                        {reminderDays.length > 0 ? (
+                            <Text size="sm">
+                                {reminderDays
+                                    .map((day) => `${day}日前`)
+                                    .join('、')}
+                            </Text>
+                        ) : (
+                            <Text size="sm" c="dimmed">
+                                なし
+                            </Text>
+                        )}
+                    </DetailRow>
+
+                    <Divider my="xs" />
+
+                    <DetailRow label="通知手段">
+                        {channels.length > 0 ? (
+                            <Group gap="xs" justify="flex-end">
+                                {channels.map((channel) => (
+                                    <Badge
+                                        key={channel}
+                                        {...pillBadgeProps}
+                                        variant="light"
+                                        color="grape"
+                                    >
+                                        {channelLabel(channel)}
+                                    </Badge>
+                                ))}
+                            </Group>
+                        ) : (
+                            <Text size="sm" c="dimmed">
+                                なし
+                            </Text>
+                        )}
                     </DetailRow>
 
                     <Divider my="xs" />

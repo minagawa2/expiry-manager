@@ -55,6 +55,7 @@ class DocumentUpdateDeleteTest extends TestCase
                 'type' => '普通自動車',
                 'expiry_date' => now()->addYears(2)->toDateString(),
                 'memo' => '更新後メモ',
+                'channels' => ['email'],
             ]);
 
         $response->assertRedirect(route('documents.index'));
@@ -93,6 +94,7 @@ class DocumentUpdateDeleteTest extends TestCase
             ->patch(route('documents.update', $document->id), [
                 'person_id' => $person->id,
                 'title' => '乗っ取り',
+                'channels' => ['email'],
             ]);
 
         $response->assertForbidden();

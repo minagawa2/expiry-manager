@@ -42,11 +42,15 @@ export default function Index({
     documents,
     people,
     categories,
+    channelOptions,
+    reminderDayOptions,
     openDocumentId,
 }: PageProps<{
     documents: Document[];
     people: Pick<Person, 'id' | 'name' | 'display_order' | 'is_self'>[];
     categories: DocumentCategoryOption[];
+    channelOptions: DocumentCategoryOption[];
+    reminderDayOptions: number[];
     openDocumentId?: number | null;
 }>) {
     const [formOpened, { open: openForm, close: closeForm }] =
@@ -402,6 +406,7 @@ export default function Index({
                 onClose={closeDetail}
                 document={selectedDocument}
                 categories={categories}
+                channelOptions={channelOptions}
                 onEdit={openEditFromDetail}
             />
 
@@ -410,6 +415,8 @@ export default function Index({
                 onClose={closeForm}
                 people={people}
                 categories={categories}
+                channelOptions={channelOptions}
+                reminderDayOptions={reminderDayOptions}
                 document={editingDocument}
             />
 

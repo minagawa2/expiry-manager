@@ -36,6 +36,8 @@ export interface Document {
     status: DocumentStatus;
     updated_at: string;
     days_remaining?: number;
+    reminder_days?: number[];
+    channels?: string[];
     person?: Pick<Person, 'id' | 'name' | 'is_self'>;
 }
 

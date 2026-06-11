@@ -2,8 +2,11 @@ import { Document, DocumentCategoryOption, Person } from '@/types';
 import { useForm } from '@inertiajs/react';
 import {
     Button,
+    Checkbox,
+    Divider,
     Group,
     Modal,
+    MultiSelect,
     Select,
     Stack,
     Textarea,
@@ -16,6 +19,8 @@ type Props = {
     onClose: () => void;
     people: Pick<Person, 'id' | 'name' | 'is_self'>[];
     categories: DocumentCategoryOption[];
+    channelOptions: DocumentCategoryOption[];
+    reminderDayOptions: number[];
     document?: Document | null;
 };
 
@@ -26,7 +31,12 @@ const emptyForm = {
     type: '',
     expiry_date: '',
     memo: '',
+    channels: [] as string[],
+    reminder_days: [] as string[],
 };
+
+const DEFAULT_CHANNELS = ['email'];
+const DEFAULT_REMINDER_DAYS = ['90'];
 
 function isSelfPerson(person: Pick<Person, 'is_self'>): boolean {
     return Boolean(person.is_self);
@@ -51,6 +61,8 @@ export default function DocumentFormModal({
     onClose,
     people,
     categories,
+    channelOptions,
+    reminderDayOptions,
     document = null,
 }: Props) {
     const isEdit = document !== null;
@@ -66,6 +78,11 @@ export default function DocumentFormModal({
     const categoryOptions = categories.map((category) => ({
         value: category.value,
         label: category.label,
+    }));
+
+    const reminderDayData = reminderDayOptions.map((day) => ({
+        value: String(day),
+        label: `${day}日前`,
     }));
 
     useEffect(() => {
@@ -86,11 +103,15 @@ export default function DocumentFormModal({
                     ? document.expiry_date.slice(0, 10)
                     : '',
                 memo: document.memo ?? '',
+                channels: document.channels ?? [...DEFAULT_CHANNELS],
+                reminder_days: (document.reminder_days ?? []).map(String),
             });
         } else {
             setData({
                 ...emptyForm,
                 person_id: defaultPersonId(people),
+                channels: [...DEFAULT_CHANNELS],
+                reminder_days: [...DEFAULT_REMINDER_DAYS],
             });
         }
     }, [opened, document, people]);
@@ -188,6 +209,38 @@ export default function DocumentFormModal({
                         }
                         error={errors.expiry_date}
                     />
+
+                    <Divider label="通知設定" labelPosition="left" />
+
+                    <MultiSelect
+                        label="通知日"
+                        placeholder="選択してください"
+                        description="有効期限の何日前に通知するか（複数選択可）"
+                        data={reminderDayData}
+                        value={data.reminder_days}
+                        onChange={(value) => setData('reminder_days', value)}
+                        error={errors.reminder_days}
+                        clearable
+                    />
+
+                    <Checkbox.Group
+                        label="通知手段"
+                        description="登録した通知日に、選んだ手段すべてへ通知します"
+                        value={data.channels}
+                        onChange={(value) => setData('channels', value)}
+                        error={errors.channels}
+                        withAsterisk
+                    >
+                        <Group mt="xs" gap="lg">
+                            {channelOptions.map((channel) => (
+                                <Checkbox
+                                    key={channel.value}
+                                    value={channel.value}
+                                    label={channel.label}
+                                />
+                            ))}
+                        </Group>
+                    </Checkbox.Group>
 
                     <Textarea
                         label="メモ"
